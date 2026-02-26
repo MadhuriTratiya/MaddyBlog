@@ -1,0 +1,108 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tech Blog | Madhuri Tratiya</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .blog-card { border-radius: 20px; transition: 0.3s; border: none; overflow: hidden; }
+        .blog-card:hover { transform: translateY(-5px); }
+        .btn-read { background-color: #ee3124; color: white; border-radius: 50px; padding: 6px 20px; text-decoration: none; display: inline-block; }
+        .btn-read:hover { background-color: #d21d12; color: white; }
+        .profile-card { border-radius: 20px; padding: 30px; border: none; }
+        /* Ensures profile images are always perfect circles */
+        .profile-img { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; }
+        /* Fix for post images to keep them uniform */
+        .post-thumb { width: 100%; height: 200px; object-fit: cover; border-radius: 15px; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-danger" href="{% url 'home' %}">MaddyBlog</a>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link fw-bold" href="{% url 'home' %}">Home</a>
+                </li>
+                
+                {% for cat in categories %}
+                <li class="nav-item">
+                    <a class="nav-link fw-bold {% if active_category == cat.name %}text-danger{% endif %}" 
+                    href="{% url 'category_posts' cat.name %}">
+                    {{ cat.name }}
+                    </a>
+                </li>
+                </li>
+                {% endfor %}
+                
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="container mt-5">
+    <div class="row">
+
+        <div class="col-lg-8">
+            <h2 class="mb-4 fw-bold">MaddyBlog</h2>
+            
+            {% for post in posts %}
+            <div class="card blog-card shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        {% if post.image %}
+                        <div class="col-md-4">
+                            <img src="{{ post.image.url }}" class="post-thumb shadow-sm" alt="{{ post.title }}">
+                        </div>
+                        {% endif %}
+                        
+                        <div class="{% if post.image %}col-md-8{% else %}col-md-12{% endif %}">
+                            <span class="badge bg-light text-danger mb-2">{{ post.category.name }}</span>
+                            <h3 class="fw-bold">{{ post.title }}</h3>
+                            <p class="text-muted small"><i class="far fa-calendar-alt"></i> {{ post.created_at|date:"M d, Y" }}</p>
+                           <div class="card-text text-secondary">{{ post.content|safe|truncatewords:30 }}</div>
+                            <a href="{% url 'post_detail' post.slug %}" class="btn-read">Read More</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info">No posts available yet. Check back soon!</div>
+            {% endfor %}
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card profile-card shadow-sm text-center bg-white">
+                
+                {% if user.profile.image %}
+                    <img src="{{ user.profile.image.url }}" class="profile-img mx-auto mb-3 border border-5 border-light" alt="Profile">
+                {% else %}
+                    <img src="{% static 'images/default-user.png' %}" class="profile-img mx-auto mb-3 border border-5 border-light" alt="Default Profile">
+                {% endif %}
+
+                <h4 class="fw-bold">{{ user.get_full_name|default:"Madhuri Tratiya" }}</h4>
+                <p class="text-danger fw-semibold">Database Specialist</p>
+                <hr>
+
+                <div class="mb-3 fs-5">
+                    <a href="https://www.linkedin.com/in/madhuri-tratiya-b88b9a228/" class="text-dark mx-2"><i class="fab fa-linkedin"></i></a>
+                    <a href="https://github.com/MadhuriTratiya?tab=repositories" class="text-dark mx-2"><i class="fab fa-github"></i></a>
+                    <!-- <a href="#" class="text-dark mx-2"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="text-dark mx-2"><i class="fas fa-envelope"></i></a> -->
+                </div>
+
+          <a href="{% url 'user_profile' user.username %}" class="btn btn-outline-danger w-100 rounded-pill fw-bold">
+                View Profile
+        </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
