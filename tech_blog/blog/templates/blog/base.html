@@ -1,0 +1,124 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MaddyBlog{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .navbar-brand img { height: 40px; margin-right: 10px; }
+        .btn-read { background-color: #ee3124; color: white; border-radius: 50px; padding: 8px 25px; text-decoration: none; font-weight: bold; }
+        .post-thumb { width: 100%; height: 180px; object-fit: cover; border-radius: 15px; }
+        .profile-card { border-radius: 20px; border: none; }
+        .profile-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; margin: 0 auto; display: block; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+    <div class="container-fluid px-4">
+        {# --- 1. SIDEBAR TOGGLE BUTTON: Only visible to the owner --- #}
+        {% if user.is_authenticated and profile_user and user.username == profile_user.username %}
+            <button class="btn btn-light me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
+                <i class="fas fa-bars"></i>
+            </button>
+        {% endif %}
+
+        <a class="navbar-brand fw-bold text-danger fs-3" href="{% url 'home' %}">MaddyBlog</a>
+        
+        <div class="ms-auto d-flex align-items-center">
+            {# --- LOGIC: If we are on the Public Profile or Post Detail, hide everything --- #}
+            {% if request.resolver_match.url_name == 'user_profile' or request.resolver_match.url_name == 'post_detail' %}
+                
+                {# READER VIEW: Only show Login/SignUp for guests, nothing for logged-in users #}
+                {% if not user.is_authenticated %}
+                    <a class="btn btn-outline-danger btn-sm rounded-pill px-4 me-2" href="{% url 'login' %}">Login</a>
+                    <a class="btn btn-danger btn-sm rounded-pill px-4" href="{% url 'register' %}">Sign Up</a>
+                {% endif %}
+
+            {% else %}
+                
+                {# MANAGEMENT VIEW: This shows on Home, Library, Stats, etc. #}
+                {% if user.is_authenticated %}
+                    <a href="{% url 'start_writing' %}" class="btn btn-danger btn-sm rounded-pill me-3">Start Writing</a>
+                    
+                    <a href="{% url 'profile_edit' %}" class="btn btn-outline-danger btn-sm rounded-pill me-3">Edit Profile</a>
+
+                    <div class="d-flex align-items-center me-3">
+                        {% if user.profile.image %}
+                            <img src="{{ user.profile.image.url }}" class="rounded-circle border" style="width: 32px; height: 32px; object-fit: cover;" alt="profile">
+                        {% endif %}
+                    </div>
+
+                    <form action="{% url 'logout' %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Logout</button>
+                    </form>
+                {% else %}
+                    <a class="btn btn-outline-danger btn-sm rounded-pill px-4 me-2" href="{% url 'login' %}">Login</a>
+                    <a class="btn btn-danger btn-sm rounded-pill px-4" href="{% url 'register' %}">Sign Up</a>
+                {% endif %}
+                
+            {% endif %}
+        </div>
+    </div>
+</nav>
+{# --- 2. ENTIRE SIDEBAR DIV: Only rendered for the owner --- #}
+{% if user.is_authenticated and profile_user and user.username == profile_user.username %}
+<div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarMenu">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title fw-bold">MaddyBlog Menu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <ul class="nav flex-column fs-5">
+            <li class="nav-item mb-3">
+                <a class="nav-link text-dark fw-bold" href="{% url 'home' %}">
+                    <i class="fas fa-home me-3 text-danger"></i> Home
+                </a>
+            </li>
+            <li class="nav-item mb-3">
+                <a class="nav-link text-dark fw-bold" href="{% url 'library' %}">
+                    <i class="fas fa-book-open me-3 text-danger"></i> Library
+                </a>
+            </li>
+
+            <hr>
+
+            <li class="nav-item mb-3">
+                <a class="nav-link text-dark fw-bold" href="{% url 'user_profile' user.username %}">
+                    <i class="fas fa-user-circle me-3 text-danger"></i> My Profile
+                </a>
+            </li>
+
+            <li class="nav-item mb-3">
+                <a class="nav-link text-dark fw-bold" href="{% url 'user_profile' user.username %}" target="_blank">
+                    <i class="bi bi-eye-fill me-3 text-danger"></i> View Public Profile
+                </a>
+            </li>
+
+            <li class="nav-item mb-3">
+                <a class="nav-link text-dark fw-bold" href="{% url 'stats' %}">
+                    <i class="fas fa-chart-line me-3 text-danger"></i> Stats
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endif %}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

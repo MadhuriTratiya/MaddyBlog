@@ -1,0 +1,41 @@
+{% extends 'blog/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="bg-danger p-4 text-white text-center">
+            <h2 class="fw-bold mb-0">Unleash Your Insights</h2>
+            <p class="mb-0 opacity-75">Share your expertise with the community</p>
+        </div>
+        
+        <div class="card-body p-4 p-md-5">
+            {{ form.media }}
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label class="form-label fw-bold h5">Blog Title</label>
+                    <input type="text" name="title" class="form-control form-control-lg border-2 shadow-sm" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold h5">Content</label>
+                    <textarea name="content" id="editor_id"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-danger btn-lg rounded-pill px-5 shadow">Publish Article</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'ckeditor/ckeditor-init.js' %}"></script>
+<script src="{% static 'ckeditor/ckeditor/ckeditor.js' %}"></script>
+<script>
+    CKEDITOR.replace('editor_id', {
+        versionCheck: false, // Hides the red security warning
+        height: 400,
+        toolbar: 'full'      // Provides the professional formatting tools
+    });
+</script>
+{% endblock %}

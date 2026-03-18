@@ -4,6 +4,8 @@
 <head>
     <title>{{ profile_user.get_full_name }} | Oracle Specialist</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons for the eye and cloud icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { background-color: #f0f2f5; }
@@ -12,6 +14,9 @@
         .spec-list li { margin-bottom: 10px; font-size: 1.1rem; list-style: none; }
         .spec-list li i { color: #ee3124; margin-right: 10px; }
         .profile-main-img { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 5px solid #f8f9fa; }
+        .post-card { border-bottom: 1px solid #eee; padding-bottom: 20px; margin-bottom: 20px; }
+        .post-card:last-child { border-bottom: none; }
+        .label-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 50px; background: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; text-decoration: none; }
     </style>
 </head>
 <body>
@@ -19,52 +24,83 @@
 <div class="container mt-5">
     <div class="row">
         <div class="col-lg-8">
+            <!-- About Section -->
             <div class="hero-section">
                 <h1 class="fw-bold mb-3">Hi, My name is {{ profile_user.get_full_name|default:profile_user.username }}.</h1>
                 <div class="bio-content text-muted">
-    <p class="lead mb-4">
-        I am <strong>Madhuri Tratiya</strong>, an <strong>Oracle Database Administrator</strong> with a strong focus on enterprise database technologies and Oracle ecosystem solutions.
-    </p>
-
-    <p class="mb-4">
-        I work extensively with <strong>Oracle Database 19c</strong>, specializing in:
-    </p>
-    
-    <ul class="list-unstyled ms-3 mb-4 expertise-list">
-        <li><i class="fas fa-check text-danger me-2"></i> ASM & RMAN Backup and Recovery</li>
-        <li><i class="fas fa-check text-danger me-2"></i> Performance Optimization</li>
-        <li><i class="fas fa-check text-danger me-2"></i> High Availability Architectures</li>
-        <li><i class="fas fa-check text-danger me-2"></i> Schema Management & Data Reliability</li>
-    </ul>
-
-    <p class="mb-4">
-        My current focus is on <strong>Oracle Cloud Infrastructure (OCI)</strong> and modern database practices, with a keen interest in cloud-based deployment and management. 
-    </p>
-
-    <p>
-        As an enthusiast for knowledge sharing and community engagement, I actively contribute through mentoring and content creation. Through the <strong>Oracle ACE Program</strong>, I aim to collaborate with professionals and grow as a cloud-ready database specialist.
-    </p>
-</div>
+                    <p class="lead mb-4">
+                        I am <strong>Madhuri Tratiya</strong>, an <strong>Oracle Database Administrator</strong> with a strong focus on enterprise database technologies.
+                    </p>
+                    <ul class="list-unstyled ms-3 mb-4 expertise-list">
+                        <li><i class="fas fa-check text-danger me-2"></i> ASM & RMAN Backup and Recovery</li>
+                        <li><i class="fas fa-check text-danger me-2"></i> Performance Optimization</li>
+                        <li><i class="fas fa-check text-danger me-2"></i> High Availability Architectures</li>
+                    </ul>
+                </div>
                 <hr class="my-4">
                 <h4 class="fw-bold mb-3">Specialities:</h4>
                 <ul class="spec-list p-0">
                     <li><i class="fas fa-check-circle"></i> Oracle Database Upgrade & Migration Expert</li>
-                    <li><i class="fas fa-check-circle"></i> Oracle GoldenGate 19c Classic & Microservices</li>
+                    <li><i class="fas fa-check-circle"></i> Oracle GoldenGate 19c</li>
                     <li><i class="fas fa-check-circle"></i> High Availability (RAC) & Disaster Recovery (DR)</li>
                 </ul>
             </div>
 
-            <div class="bg-white p-4 rounded-4 shadow-sm">
-                <h4 class="fw-bold mb-4">MaddyBlog</h4>
+            <!-- Blog Posts Section -->
+            <div class="bg-white p-4 rounded-4 shadow-sm mb-5">
+                <h4 class="fw-bold mb-4 text-danger">MaddyBlog Articles</h4>
+                
                 {% for post in posts %}
-                <div class="mb-3">
-                    <a href="{% url 'post_detail' post.slug %}" class="text-decoration-none text-dark h5 fw-bold d-block">{{ post.title }}</a>
-                    <small class="text-muted">{{ post.created_at|date:"M d, Y" }}</small>
+                <div class="post-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <a href="{% url 'post_detail' post.author.username post.slug %}" class="text-decoration-none text-dark h5 fw-bold mb-0">
+                                    {{ post.title }}
+                                </a>
+                                {% if not post.is_published and user == profile_user %}
+                                    <span class="badge bg-warning text-dark small" style="font-size: 0.7rem;">DRAFT</span>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">{{ post.created_at|date:"M d, Y" }} &bull; {{ post.view_count|default:0 }} views</small>
+                        </div>
+                    </div>
+
+                    <!-- Labels/Tags -->
+                    {% if post.labels %}
+                    <div class="mb-3 mt-1">
+                        {% for label in post.labels.split %}
+                            <span class="label-badge me-1">#{{ label|cut:"," }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <p class="text-muted small">{{ post.content|striptags|truncatewords:25 }}</p>
+
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div>
+                            <!-- Show toggle button only to the owner -->
+                            {% if user == profile_user %}
+                            <a href="{% url 'toggle_publish' post.id %}" 
+                               class="btn {% if post.is_published %}btn-outline-secondary{% else %}btn-success{% endif %} btn-sm rounded-pill px-3">
+                                {% if post.is_published %}
+                                    <i class="bi bi-eye-slash"></i> Unpublish
+                                {% else %}
+                                    <i class="bi bi-cloud-arrow-up"></i> Publish
+                                {% endif %}
+                            </a>
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'post_detail' post.author.username post.slug %}" class="btn btn-link text-danger fw-bold p-0 text-decoration-none">Read More &rarr;</a>
+                    </div>
                 </div>
+                {% empty %}
+                <p class="text-muted">No articles published yet.</p>
                 {% endfor %}
             </div>
         </div>
 
+        <!-- Sidebar -->
         <div class="col-lg-4">
             <div class="sidebar-card shadow-sm text-center">
                 {% if profile_user.profile.image %}
@@ -76,11 +112,12 @@
                     <a href="#" class="text-primary"><i class="fab fa-linkedin"></i></a>
                     <a href="#" class="text-dark"><i class="fab fa-github"></i></a>
                 </div>
-                <a href="{% url 'home' %}" class="btn btn-danger w-100 rounded-pill fw-bold">Explore More Articles</a>
+                <a href="{% url 'home' %}" class="btn btn-danger w-100 rounded-pill fw-bold">Explore All Articles</a>
             </div>
         </div>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

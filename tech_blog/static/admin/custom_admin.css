@@ -1,0 +1,22 @@
+/* Change the header color to a dark professional blue */
+#header {
+    background: #2c3e50 !important;
+    color: #ecf0f1 !important;
+}
+
+/* Change the color of "Add" buttons */
+.addlink {
+    background-color: #52ae27 !important;
+}   
+.sidebar {
+    position: sticky;
+    top: 110px;
+}
+
+body {
+    background-color: #f3f5f9;
+}
+
+.card {
+    border-radius: 20px !important;
+}

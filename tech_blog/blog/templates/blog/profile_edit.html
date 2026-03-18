@@ -1,0 +1,83 @@
+{% extends "blog/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 rounded-4 p-4">
+                <h2 class="fw-bold text-danger mb-4">Update My Profile</h2>
+                
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <fieldset class="form-group">
+                        <legend class="border-bottom mb-4">Profile Info</legend>
+                        
+                        <!-- Account Fields -->
+                        {{ u_form|crispy }}
+                        
+                        <!-- Detailed Profile Fields (Photo, Bio, Skills, etc.) -->
+                        {{ p_form|crispy }}
+                    </fieldset>
+
+                    <fieldset class="form-group mt-4">
+                        <legend class="border-bottom mb-4">Website & Social Links</legend>
+                        
+                        {{ link_formset.management_form }}
+                        
+                        <div id="link-form-list">
+                            {% for form in link_formset %}
+                                <div class="link-form-row border p-3 mb-2 rounded bg-light">
+                                    {{ form|crispy }}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="add-link">
+                            <i class="bi bi-plus-circle"></i> Add Another Link
+                        </button>
+                    </fieldset>
+
+                    <div class="form-group mt-5">
+                        <button class="btn btn-danger rounded-pill px-5 btn-lg" type="submit">
+                            Save All Changes
+                        </button>
+                        <a href="{% url 'user_profile' user.username %}" class="btn btn-link text-secondary text-decoration-none">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('add-link').addEventListener('click', function() {
+        const formList = document.getElementById('link-form-list');
+        // Note: Check your management form prefix. 
+        // If your link_formset uses a prefix, update 'id_links-TOTAL_FORMS' accordingly.
+        const totalForms = document.querySelector('[id$="-TOTAL_FORMS"]');
+        const formNum = parseInt(totalForms.value);
+        
+        // Clone the first row
+        const newForm = formList.children[0].cloneNode(true);
+        
+        // Update the ID/Name numbers in the HTML (e.g., profile_links-0- to profile_links-1-)
+        const nameRegex = /-(\d)-/g;
+        newForm.innerHTML = newForm.innerHTML.replace(nameRegex, `-${formNum}-`);
+
+        // Clear existing values in the cloned inputs
+        const inputs = newForm.querySelectorAll('input');
+        inputs.forEach(input => {
+            if(input.type !== 'hidden') {
+                input.value = '';
+                // Clear any error messages from the cloned row
+                if(input.classList.contains('is-invalid')) input.classList.remove('is-invalid');
+            }
+        });
+
+        formList.appendChild(newForm);
+        totalForms.setAttribute('value', formNum + 1);
+    });
+</script>
+{% endblock content %}

@@ -1,0 +1,70 @@
+{% extends 'blog/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="fw-bold mb-4 border-bottom pb-2 text-danger">Library</h2>
+    <p class="text-muted mb-5">Browsing your technical insights and articles.</p>
+
+    <div class="row justify-content-center">
+        
+        {% for post in posts %}
+        <div class="col-12 col-lg-8 mb-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden position-relative">
+                
+                {# --- 1. Status Badge: ONLY visible to you (the owner) --- #}
+                {% if user.is_authenticated and user.username == profile_user.username %}
+                <div class="position-absolute top-0 end-0 m-3">
+                    {% if post.is_published %}
+                        <span class="badge bg-success shadow-sm">Published</span>
+                    {% else %}
+                        <span class="badge bg-secondary shadow-sm">Draft</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <span class="badge bg-light text-danger">{{ post.category.name }}</span>
+                    </div>
+                    
+                    <h5 class="card-title fw-bold">
+                        <a href="{% url 'post_detail' post.author.username post.slug %}" class="text-decoration-none text-dark">
+                            {{ post.title }}
+                        </a>
+                    </h5>
+                    
+                    <p class="card-text text-secondary small mt-2">
+                        {{ post.content|safe|truncatewords:25 }}
+                    </p>
+                </div>
+
+                <div class="card-footer bg-white border-0 px-4 pb-4 pt-0 d-flex justify-content-between align-items-center">
+                    <small class="text-muted">By {{ post.author.username }} on {{ post.created_at|date:"M d, Y" }}</small>
+                    
+                    {# --- 2. Toggle Button: ONLY visible to you (the owner) --- #}
+                    {% if user.is_authenticated and user.username == profile_user.username %}
+                    <a href="{% url 'toggle_publish' post.id %}" 
+                       class="btn {% if post.is_published %}btn-outline-warning{% else %}btn-success{% endif %} btn-sm rounded-pill px-4 shadow-sm">
+                        {% if post.is_published %}
+                            <i class="bi bi-eye-slash"></i> Unpublish
+                        {% else %}
+                            <i class="bi bi-eye"></i> Publish
+                        {% endif %}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="alert alert-info py-4 w-75 mx-auto">
+                <i class="bi bi-journal-x fs-1 d-block mb-3"></i>
+                The library is currently empty. Start writing to fill it up!
+            </div>
+        </div>
+        {% endfor %}
+        
+    </div>
+</div>
+{% endblock %}

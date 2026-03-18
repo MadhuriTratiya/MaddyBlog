@@ -1,19 +1,20 @@
 from pathlib import Path
 import os
+import oracledb
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-s81r26z0nk=@dh6gu(btpm#3iib_r@5-%1wlmbnn!+@x5_!do4'
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.179.79']
 
-# Application definition
+# Silence the CKEditor 4 security warning
+SILENCED_SYSTEM_CHECKS = ["ckeditor.W001"]
+
 INSTALLED_APPS = [
+    'jazzmin',  
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -21,16 +22,21 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
-    # Blog App
-    'blog',
+    # Crispy Forms (Required for your Profile Edit page)
+    'crispy_forms',
+    'crispy_bootstrap4', 
     
-    # CKEditor Apps (Ensure each is listed only ONCE)
+    'blog',
     'ckeditor',
     'ckeditor_uploader',
 ]
 
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
+CRISPY_TEMPLATE_PACK = "bootstrap4"
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -44,10 +50,11 @@ ROOT_URLCONF = 'tech_blog.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'blog' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -58,100 +65,57 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'tech_blog.wsgi.application'
 
-# Database Configuration for SQL Server
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'mssql',
-#         'NAME': 'MTBlogDB',
-#         'USER': 'MTBlogUser',
-#         'PASSWORD': 'MTBlogPass123!',
-#         'HOST': 'localhost',
-#         'PORT': '',
-#         'OPTIONS': {
-#             'driver': 'ODBC Driver 17 for SQL Server',
-#             'unicode_results': True,
-#             'extra_params': 'TrustServerCertificate=yes;Encrypt=no;',
-#         },
-#     }
-# }
+# --- DATABASE CONFIGURATION (Oracle Autonomous) ---
+WALLET_PATH = os.path.join(BASE_DIR, 'oracle_wallet')
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.oracle',
+        'NAME': 'maddyblog_low', 
+        'USER': 'ADMIN',
+        'PASSWORD': 'Madhuri@12#04',
+        'OPTIONS': {
+            'config_dir': WALLET_PATH,
+            'wallet_location': WALLET_PATH,
+            'wallet_password': 'Madhuri@12#04',
+        },
     }
 }
 
-# Password validation
-AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
-]
-
-# Internationalization
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
-USE_I18N = True
-USE_TZ = True
-
-# Static files (CSS, JavaScript)
+# --- STATIC AND MEDIA FILES ---
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Media files (Uploaded Images for Blog/Categories)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Add these configurations at the bottom
-CKEDITOR_UPLOAD_PATH = "uploads/" # Images will go to media/uploads/
+# CKEDITOR CONFIGURATION
+CKEDITOR_UPLOAD_PATH = "uploads/" 
 CKEDITOR_IMAGE_BACKEND = "pillow"
-CKEDITOR_CONFIGS = {
-   'default': {
-        'toolbar': 'Custom',
-        'height': 400,
-        'width': '100%',
-        'toolbar_Custom': [
-            ['Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat'],
-            ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
-            ['Link', 'Unlink', 'Anchor'],
-            ['Image', 'Table', 'HorizontalRule', 'SpecialChar'],
-            ['Format', 'Font', 'FontSize'],
-            ['TextColor', 'BGColor'],
-            ['CodeSnippet', 'Source'], # Great for SQL/Linux commands
-            ['Maximize'],
-        ],
-        'extraPlugins': ','.join(['codesnippet', 'uploadimage', 'justify', 'font']),
-    },
-}
-
-# tech_blog/settings.py
-
-# Directory where uploaded images will be stored
-CKEDITOR_UPLOAD_PATH = "uploads/"
-
-# Restrict uploads to only images for security
-CKEDITOR_IMAGE_BACKEND = "pillow"
-
-# tech_blog/settings.py
-
-CKEDITOR_UPLOAD_PATH = "uploads/"
-CKEDITOR_IMAGE_BACKEND = "pillow"
-
-# This allows the 'Upload' tab to actually talk to your Django URLs
 CKEDITOR_CONFIGS = {
     'default': {
+        'versionCheck': False,
+        'skin': 'moono-lisa',
         'toolbar': 'full',
+        'height': 500,
+        'width': '100%',
         'extraPlugins': ','.join([
-            'codesnippet', 
-            'uploadimage', 
-            'widget', 
-            'lineutils', 
-            'justify', 
-            'font'
+            'codesnippet', 'uploadimage', 'widget', 'lineutils', 'justify', 'font'
         ]),
-        'forcePasteAsPlainText': True,
-        # IMPORTANT: These lines tell CKEditor where to send the file
         'filebrowserUploadUrl': '/ckeditor/upload/',
         'filebrowserBrowseUrl': '/ckeditor/browse/',
     },
 }
+
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.email.us-ashburn-1.oci.oraclecloud.com' 
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'ocid1.user.oc1..your_generated_smtp_username'
+EMAIL_HOST_PASSWORD = 'your_generated_smtp_password'
+DEFAULT_FROM_EMAIL = 'madhuritratiya@gmail.com'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

@@ -1,0 +1,9 @@
+/* This hides the small green "+" and other action icons */
+.addlink, .changelink, .deletelink {
+    display: none !important;
+}
+
+/* Specifically target the small floating icons if they persist */
+.related-widget-wrapper-link {
+    display: none !important;
+}
