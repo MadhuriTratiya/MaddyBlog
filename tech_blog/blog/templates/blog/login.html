@@ -4,8 +4,23 @@
     <div class="row justify-content-center">
         <div class="col-md-5">
             <div class="card shadow-sm border-0 rounded-4 p-4">
-                <h2 class="text-center fw-bold mb-4">Login to MaddyBlog</h2>
+                <h2 class="text-center fw-bold mb-4">Login to Tech Blog</h2>
                 
+                {% if form.errors %}
+                    <div class="alert alert-danger alert-dismissible fade show small py-2" role="alert">
+                        Your username and password didn't match. Please try again.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="padding: 0.75rem 1rem;"></button>
+                    </div>
+                {% endif %}
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show small py-2" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="padding: 0.75rem 1rem;"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
                 <form method="POST">
                     {% csrf_token %}
                     
@@ -29,7 +44,9 @@
                             <input type="checkbox" name="remember_me" class="form-check-input" id="rememberMe">
                             <label class="form-check-label small text-muted" for="rememberMe">Remember Me</label>
                         </div>
+                        
                         <a href="{% url 'password_reset' %}" class="small text-danger text-decoration-none">Forgot Password?</a>
+                        
                     </div>
 
                     <button type="submit" class="btn btn-danger w-100 rounded-pill py-2 fw-bold mb-3 shadow-sm">Login</button>

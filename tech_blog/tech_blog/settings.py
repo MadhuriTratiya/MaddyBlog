@@ -1,20 +1,16 @@
-from pathlib import Path
 import os
+from pathlib import Path
 import oracledb
 
+# --- BASE SETUP ---
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 SECRET_KEY = 'django-insecure-s81r26z0nk=@dh6gu(btpm#3iib_r@5-%1wlmbnn!+@x5_!do4'
-
 DEBUG = True
-
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.179.79']
 
-# Silence the CKEditor 4 security warning
-SILENCED_SYSTEM_CHECKS = ["ckeditor.W001"]
-
+# --- APPS CONFIGURATION ---
 INSTALLED_APPS = [
-    'jazzmin',  
+    'jazzmin',  # UI Theme (Must be above admin)
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -22,18 +18,17 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
-    # Crispy Forms (Required for your Profile Edit page)
+    # Third Party Tools
     'crispy_forms',
     'crispy_bootstrap4', 
+    'django_summernote', 
+    'tinymce',
     
+    # Your Project Apps
     'blog',
-    'ckeditor',
-    'ckeditor_uploader',
 ]
 
-CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
-CRISPY_TEMPLATE_PACK = "bootstrap4"
-
+# --- MIDDLEWARE ---
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -47,6 +42,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'tech_blog.urls'
 
+# --- TEMPLATES ---
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -65,7 +61,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'tech_blog.wsgi.application'
 
-# --- DATABASE CONFIGURATION (Oracle Autonomous) ---
+# --- DATABASE (Oracle Autonomous) ---
 WALLET_PATH = os.path.join(BASE_DIR, 'oracle_wallet')
 
 DATABASES = {
@@ -82,40 +78,80 @@ DATABASES = {
     }
 }
 
-# --- STATIC AND MEDIA FILES ---
+# --- STATIC & MEDIA ---
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = BASE_DIR / 'media' 
 
-# CKEDITOR CONFIGURATION
-CKEDITOR_UPLOAD_PATH = "uploads/" 
-CKEDITOR_IMAGE_BACKEND = "pillow"
-CKEDITOR_CONFIGS = {
-    'default': {
-        'versionCheck': False,
-        'skin': 'moono-lisa',
-        'toolbar': 'full',
-        'height': 500,
+# --- EDITOR CONFIGURATIONS ---
+
+# 1. TinyMCE (Modern UI + AI + PC Uploads)
+TINYMCE_DEFAULT_CONFIG = {
+    "height": "500px",
+    "menubar": "file edit view insert format tools table help",
+    "plugins": "advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount",
+    
+    # Replace 'image' with 'pc_upload' here
+    "toolbar": "undo redo | ai_fix pc_upload | formatselect | bold italic | alignleft aligncenter | bullist numlist",
+    
+    "images_upload_url": "/tinymce-upload/",
+    "automatic_uploads": True,
+    "content_style": "body { font-family:Helvetica,Arial,sans-serif; font-size:16px }",
+    
+    # Spellchecker Plugin
+    "external_plugins": {
+        "wsc": "https://svc.webspellchecker.net/spellcheck3/js/wscb/wscb_tinymce.js"
+    },
+    
+    # Image Upload Logic (Points to your new URL)
+    "images_upload_url": "/tinymce-upload/",
+    "automatic_uploads": True,
+    "file_picker_types": "image",
+}
+
+# 2. Summernote (Alternative)
+SUMMERNOTE_THEME = 'bs4'
+SUMMERNOTE_CONFIG = {
+    'iframe': True,
+    'summernote': {
         'width': '100%',
-        'extraPlugins': ','.join([
-            'codesnippet', 'uploadimage', 'widget', 'lineutils', 'justify', 'font'
-        ]),
-        'filebrowserUploadUrl': '/ckeditor/upload/',
-        'filebrowserBrowseUrl': '/ckeditor/browse/',
+        'height': '500',
+        'toolbar': [
+            ['style', ['style']],
+            ['font', ['bold', 'italic', 'underline', 'clear']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['insert', ['link', 'picture', 'video']],
+            ['view', ['fullscreen', 'codeview']],
+        ],
     },
 }
 
+# --- MISC ---
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
+CRISPY_TEMPLATE_PACK = "bootstrap4"
+
+# ✅ Add this line to fix the login redirect crash:
+LOGIN_URL = 'login'  
+
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+# --- EMAIL CONFIGURATION (GMAIL SETUP) ---
+# 1. You MUST uncomment this line to tell Django to send real emails!
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.email.us-ashburn-1.oci.oraclecloud.com' 
+
+# 2. Change the host from Brevo to Google
+EMAIL_HOST = 'smtp.gmail.com' 
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'ocid1.user.oc1..your_generated_smtp_username'
-EMAIL_HOST_PASSWORD = 'your_generated_smtp_password'
-DEFAULT_FROM_EMAIL = 'madhuritratiya@gmail.com'
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# 3. Use your actual Gmail address
+EMAIL_HOST_USER = 'madhuritratiya@gmail.com' 
+
+# 4. Your Google App Password (I removed the spaces for you, which is required)
+EMAIL_HOST_PASSWORD = 'ptmxzgiydhcowncm' 
+
+DEFAULT_FROM_EMAIL = 'madhuritratiya@gmail.com'

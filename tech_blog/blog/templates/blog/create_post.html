@@ -11,31 +11,114 @@
         
         <div class="card-body p-4 p-md-5">
             {{ form.media }}
+
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
+
                 <div class="mb-4">
                     <label class="form-label fw-bold h5">Blog Title</label>
-                    <input type="text" name="title" class="form-control form-control-lg border-2 shadow-sm" required>
+                    {{ form.title }}
                 </div>
 
                 <div class="mb-4">
                     <label class="form-label fw-bold h5">Content</label>
-                    <textarea name="content" id="editor_id"></textarea>
+                    {{ form.content }} 
                 </div>
 
-                <button type="submit" class="btn btn-danger btn-lg rounded-pill px-5 shadow">Publish Article</button>
+                <div class="mb-4">
+                    <label class="form-label fw-bold h5">Labels</label>
+                    {{ form.labels }}
+                </div>
+
+                <div class="d-grid d-md-block">
+                    <button type="submit" class="btn btn-danger btn-lg rounded-pill px-5 shadow">
+                        Publish Article
+                    </button>
+                </div>
             </form>
         </div>
     </div>
 </div>
 
-<script src="{% static 'ckeditor/ckeditor-init.js' %}"></script>
-<script src="{% static 'ckeditor/ckeditor/ckeditor.js' %}"></script>
 <script>
-    CKEDITOR.replace('editor_id', {
-        versionCheck: false, // Hides the red security warning
-        height: 400,
-        toolbar: 'full'      // Provides the professional formatting tools
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof tinymce !== 'undefined') {
+            tinymce.init({
+                selector: 'textarea',
+                height: 500,
+                plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount',
+                // Note: We are using 'pc_upload' in the toolbar instead of 'image'
+                toolbar: 'undo redo | ai_fix pc_upload | formatselect | bold italic | alignleft aligncenter | bullist numlist',
+                
+                setup: function (editor) {
+                    // --- 1. The Custom "Direct PC Upload" Button ---
+                    editor.ui.registry.addButton('pc_upload', {
+                        icon: 'image',
+                        tooltip: 'Upload from This PC',
+                        onAction: function (_) {
+                            // Create a hidden file input
+                            const input = document.createElement('input');
+                            input.setAttribute('type', 'file');
+                            input.setAttribute('accept', 'image/*');
+
+                            input.onchange = function () {
+                                const file = this.files[0];
+                                const formData = new FormData();
+                                formData.append('file', file);
+
+                                editor.setProgressState(true); // Show loading spinner
+
+                                // Upload directly to your Django view
+                                fetch('/tinymce-upload/', {
+                                    method: 'POST',
+                                    body: formData,
+                                    headers: {
+                                        'X-CSRFToken': '{{ csrf_token }}'
+                                    }
+                                })
+                                .then(res => res.json())
+                                .then(data => {
+                                    if (data.location) {
+                                        // Insert the image directly into the editor
+                                        editor.insertContent(`<img src="${data.location}" style="max-width:100%; height:auto;" />`);
+                                    }
+                                    editor.setProgressState(false);
+                                })
+                                .catch(err => {
+                                    console.error(err);
+                                    editor.setProgressState(false);
+                                });
+                            };
+
+                            input.click(); // Programmatically open the "This PC" window
+                        }
+                    });
+
+                    // --- 2. Keep your AI Fix button logic here too ---
+                    editor.ui.registry.addButton('ai_fix', {
+                        text: '✨ AI Fix',
+                        onAction: function (_) {
+                            const original = editor.getContent();
+                            editor.setProgressState(true);
+                            fetch('/ai-correct/', {
+                                method: 'POST',
+                                body: JSON.stringify({ content: original }),
+                                headers: { 
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': '{{ csrf_token }}' 
+                                }
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                if(data.corrected_text) editor.setContent(data.corrected_text);
+                                editor.setProgressState(false);
+                            })
+                            .catch(() => editor.setProgressState(false));
+                        }
+                    });
+                }
+            });
+        }
     });
 </script>
 {% endblock %}
